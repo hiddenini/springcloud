@@ -18,7 +18,14 @@ public class ConsumerController {
 
     @GetMapping("getUser")
     public User findById(int id) {
-        return this.restTemplate.getForObject("http://USER-PROVIDER/getUser/" + id, User.class);
+        User user = this.restTemplate.getForObject("http://USER-PROVIDER/getUser/" + id, User.class);
+        System.out.println(user);
+        System.out.println(user);
+        System.out.println(user);
+        System.out.println(user);
+        return user;
     }
+
+
 
 }

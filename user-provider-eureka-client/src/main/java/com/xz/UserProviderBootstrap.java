@@ -16,14 +16,21 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @ConditionalOnProperty(value = "eureka.client.enabled", matchIfMissing = true)
  * EurekaDiscoveryClientConfiguration  ->注入Marker 启动EurekaClientAutoConfiguration
  *
- * EurekaDiscoveryClientConfiguration中注入了一些bean
+ * EurekaClientAutoConfiguration中注入了一些bean
  * EurekaClientConfigBean 初始化eurekaClient信息
  *
  * springcloud eureka 是对netflix eureka的封装
  *
  * DiscoveryClient  -->需要EurekaClient
  *
- * EurekaClient也在 EurekaDiscoveryClientConfiguration 注入了 跟进去最后找到下面
+ * EurekaClient也在 EurekaClientAutoConfiguration 注入了 跟进去最后找到下面
+ *
+ * return new CloudEurekaClient(manager, config, this.optionalArgs,
+ * 					this.context);
+ *
+ * super(applicationInfoManager, config, args);
+ *
+ *  this(applicationInfoManager, config, args, new Provider<BackupRegistry>()
  *
  * @Inject
  *DiscoveryClient(ApplicationInfoManager applicationInfoManager, EurekaClientConfig config, AbstractDiscoveryClientOptionalArgs args,
@@ -57,7 +64,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * CacheRefreshThread 任务类 获取服务端注册表信息
  *
- * refreshRegistry()
+ * DiscoveryClient.refreshRegistry(remoteRegionsModified)
+ *
  *
  *  boolean success = fetchRegistry(remoteRegionsModified);
  *
@@ -83,6 +91,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *             }
  *
  *  make a remote call to the server for the full registry
+ *
+ *  localRegionApps.set(this.filterAndShuffle(apps));
+ *
+ *  将调用服务端接口的数据设置到
  *
  *在   initScheduledTasks() 中除了上面的拉去注册表 还有服务续约
  *

@@ -23,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * 	这个集合里面装了所有加了@LoadBalanced注解的restTemplate
  *
+ *
  *  LoadBalancerInterceptor 中的intercept方法 -->this.loadBalancer.execute(serviceName, requestFactory.createRequest(request, body, execution));
  *
  * this.loadBalancer是一个 RibbonLoadBalancerClient  RibbonLoadBalancerClient是在
@@ -32,7 +33,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * 所以说RibbonLoadBalancerClient 在这个类中被初始化了 然后在LoadBalancerAutoConfiguration初始化时就可以使用了
  *
- * 	restTemplate.getForObject("http://USER-PROVIDER/getUser/" + id, User.class);
+ *
  *
  *this.loadBalancer.execute -> RibbonLoadBalancerClient.execute(String serviceId, LoadBalancerRequest<T> request)
  *
@@ -84,6 +85,54 @@ import org.springframework.web.client.RestTemplate;
  *
  *  applications = this.localRegionApps.get();
  *
+ *  restTemplate.getForObject("http://USER-PROVIDER/getUser/" + id, User.class);
+ *
+ *  这个请求是如何被拦截的?
+ *
+ *1--RestTemplate.execute
+ *
+ * 2--RestTemplate.doExecute
+ *
+ * 3--ClientHttpRequest request = createRequest(url, method);
+ *
+ *4--HttpAccessor.createRequest
+ *
+ * 5--AbstractClientHttpRequestFactoryWrapper.createRequest
+ *
+ * 6--InterceptingClientHttpRequestFactor ->return new InterceptingClientHttpRequest(requestFactory, this.interceptors, uri, httpMethod);
+ *
+ * 7--AbstractClientHttpRequest.execute() ->executeInternal(this.headers)
+ *
+ * 8--AbstractBufferingClientHttpRequest.executeInternal ->ClientHttpResponse result = executeInternal(headers, bytes);
+ *
+ * 9--InterceptingClientHttpRequest ->return requestExecution.execute(this, bufferedOutput); 实现了ClientHttpRequestExecution的execute方法
+ *
+ * 10--InterceptingClientHttpRequest.execute ->
+ *
+ *          if (this.iterator.hasNext()) {
+ *              遍历拦截器 执行其拦截方法
+ * 				ClientHttpRequestInterceptor nextInterceptor = this.iterator.next();
+ * 				return nextInterceptor.intercept(request, body, this);
+ *                        }
+ *
+ * 11->LoadBalancerInterceptor.intercept
+ *
+ * 12--RibbonLoadBalancerClient.execute
+ *
+ * 13--拿到server 将服务名称转换为ip
+ *
+ * 14--结束后回到InterceptingClientHttpRequest.execute 拦截器遍历完成 开始执行http请求
+ *
+ * 15--return delegate.execute();
+ *
+ * 16--AbstractBufferingClientHttpRequest. ClientHttpResponse result = executeInternal(headers, bytes)
+ *
+ * 17--SimpleBufferingClientHttpRequest.executeInternal
+ *
+ * 18--SimpleClientHttpRequestFactory this.connection.connect(); 进行http请求
+ *
+ * 19--RestTemplate  responseExtractor.extractData(response) 解析成user
+ *
  */
 
 @SpringBootApplication
@@ -97,5 +146,6 @@ public class UserConsumerBootStrap {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
+
 
 }

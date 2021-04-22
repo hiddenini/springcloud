@@ -12,6 +12,7 @@
         <module>eureka-server</module>
         <module>user-provider-eureka-client</module>
         <module>user-consumer-ribbon</module>
+        <module>user-consumer-feign</module>
     </modules>
 
     <!-- 公共spring-boot配置，下面依赖jar文件不用在写版本号 -->
